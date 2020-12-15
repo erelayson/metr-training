@@ -1,0 +1,12 @@
+body {
+  padding: 2em;
+	text-align: center;
+}
+
+table {
+	margin: 0px auto;
+}
+
+#updateForm {
+	display: none;
+}
