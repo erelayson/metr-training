@@ -17,6 +17,16 @@ class Promo_model extends CI_Model {
     return $query->row_array();
   }
 
+  public function search_promos($string = FALSE){
+    if ($string === FALSE){
+      $query = $this->db->get('PROMO');
+      return $query->result_array();
+    }
+
+    $query = $this->db->like('keyword', $string, 'both')->or_like('name', $string, 'both')->or_like('description', $string, 'both')->get('PROMO'); 
+    return $query->result_array();
+  }
+
   public function set_promo(){
     $this->load->helper('url');
 
@@ -35,14 +45,13 @@ class Promo_model extends CI_Model {
     $this->load->helper('url');
 
     $data = array(
+        'keyword' => $this->input->post('keyword'),
         'name' => $this->input->post('name'),
         'description' => $this->input->post('description'),
         'expiry' => $this->input->post('expiry'),
         'renewal' => $this->input->post('renewal')
     );
-
-    $this->db->where('keyword', $keyword);
-    return $this->db->update('PROMO', $data);
+    return $this->db->replace('PROMO', $data);
   }
 
   public function delete_promo($keyword = FALSE){

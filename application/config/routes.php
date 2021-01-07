@@ -54,6 +54,7 @@ $route['translate_uri_dashes'] = FALSE;
 $route['promo/create'] = 'promo/create';
 $route['promo/edit/(:any)'] = 'promo/edit/$1';
 $route['promo/delete/(:any)'] = 'promo/delete/$1';
+$route['promo/search/(:any)'] = 'promo/search/$1';
 $route['promo/(:any)'] = 'promo/view/$1';
 $route['promo'] = 'promo';
 $route['news/create'] = 'news/create';

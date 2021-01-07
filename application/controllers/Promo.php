@@ -19,6 +19,16 @@ class Promo extends CI_Controller {
     $this->load->view('templates/footer');
   }
 
+  public function search($string = NULL){
+    $data['title'] = 'Search results';
+
+    $data['promos'] = $this->promo_model->search_promos($string);
+
+    $this->load->view('templates/header', $data);
+    $this->load->view('promo/index', $data);
+    $this->load->view('templates/footer');
+  }
+
   public function view($keyword = NULL){
     $data['promo'] = $this->promo_model->get_promos($keyword);
 
@@ -26,7 +36,7 @@ class Promo extends CI_Controller {
       show_404();
     }
 
-    $data['title'] = $data['promo']['keyword'];
+    $data['title'] = "";
 
     $this->load->view('templates/header', $data);
     $this->load->view('promo/view', $data);
@@ -53,7 +63,7 @@ class Promo extends CI_Controller {
     }
     else{
         $this->promo_model->set_promo();
-        $this->load->view('promo/index');
+        redirect('promo');
     }
   }
 
@@ -68,13 +78,37 @@ class Promo extends CI_Controller {
     return checkdate($month, $day, $year) and ($hour <= 24) and ($min < 60);
   }
 
-  public function update(){
-    
+  public function edit($keyword = NULL){
+    $this->load->helper('form');
+    $this->load->library('form_validation');
+    $data['promo'] = $this->promo_model->get_promos($keyword);
+
+    if (empty($data['promo'])){
+      show_404();
+    }
+
+    $data['title'] = $data['promo']['keyword'];
+
+    $this->form_validation->set_rules('name', 'Name', 'required');
+    $this->form_validation->set_rules('description', 'Description', 'required');
+    $this->form_validation->set_rules('expiry', 'Expiry', 'required|callback_datetime_valid', array('datetime_valid' => 'Invalid date received'));
+    $this->form_validation->set_rules('renewal', 'Renewal', 'required|numeric|greater_than_equal_to[0]');
+
+    if ($this->form_validation->run() === FALSE){
+        $this->load->view('templates/header', $data);
+        $this->load->view('promo/update', $data);
+        $this->load->view('templates/footer');
+
+    }
+    else{
+        echo $this->promo_model->update_promo();
+        redirect('promo');
+    }
   }
 
   public function delete($keyword = NULL){
     $this->promo_model->delete_promo($keyword);
-    $this->load->view('promo/index');
+    redirect('promo');
   }
 
 }
