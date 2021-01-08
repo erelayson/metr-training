@@ -35,6 +35,7 @@ class Promo_model extends CI_Model {
         'name' => $this->input->post('name'),
         'description' => $this->input->post('description'),
         'expiry' => $this->input->post('expiry'),
+        'expiry_unit' => $this->input->post('expiry_unit'),
         'renewal' => $this->input->post('renewal')
     );
 
@@ -45,20 +46,51 @@ class Promo_model extends CI_Model {
     $this->load->helper('url');
 
     $data = array(
-        'keyword' => $this->input->post('keyword'),
-        'name' => $this->input->post('name'),
-        'description' => $this->input->post('description'),
-        'expiry' => $this->input->post('expiry'),
-        'renewal' => $this->input->post('renewal')
+      'keyword' => $this->input->post('keyword'),
+      'name' => $this->input->post('name'),
+      'description' => $this->input->post('description'),
+      'expiry' => $this->input->post('expiry'),
+      'expiry_unit' => $this->input->post('expiry_unit'),
+      'renewal' => $this->input->post('renewal')
     );
     return $this->db->replace('PROMO', $data);
   }
 
   public function delete_promo($keyword = FALSE){
     $this->load->helper('url');
+    $promo_skus = $this->db->get_where('PROMO_SKU', array('promo' => $keyword))->result_array();
+    foreach ($promo_skus as $promo_sku) {
+      $this->db->delete('PROMO_SERVICE_SKU', array('promo_sku' => $promo_sku['keyword']));
+    }
+    $this->db->delete('PROMO_SKU', array('promo' => $keyword));
     return $this->db->delete('PROMO', array('keyword' => $keyword));
   }
-}
 
-/* End of file Promo_model.php */
-/* Location: .//c/users/eizerr~1/appdata/local/temp/localhost.localdomain-4lrtxd/Promo_model.php */
+  public function toggle_promo($keyword = FALSE){
+    $this->load->helper('url');
+
+    $query_activated = $this->db->select(array('status','activated'))->get_where('PROMO', array('keyword' => $keyword));
+
+    if ($query_activated->row_array()['status']) {
+      $promo_data = array(
+        'status' => '0'
+      );
+    } else {
+      $promo_data = array(
+        'status' => '1'
+      );
+      if (!$query_activated->row_array()['activated']){
+        $promo_data['activated'] = '1';
+        // Cascade activation
+        $promosku_data = array(
+          'status' => '1',
+        );
+
+        $this->db->where('promo', $keyword)->set($promosku_data);
+        $this->db->update('PROMO_SKU');
+      }
+    }
+    $this->db->where('keyword', $keyword)->set($promo_data);
+    $this->db->update('PROMO');
+  }
+}

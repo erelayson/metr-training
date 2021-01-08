@@ -51,12 +51,24 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
 $route['promo/create'] = 'promo/create';
+$route['promo/toggle/(:any)'] = 'promo/toggle/$1';
 $route['promo/edit/(:any)'] = 'promo/edit/$1';
 $route['promo/delete/(:any)'] = 'promo/delete/$1';
-$route['promo/search/(:any)'] = 'promo/search/$1';
 $route['promo/(:any)'] = 'promo/view/$1';
 $route['promo'] = 'promo';
+
+$route['promosku/create'] = 'promosku/create';
+$route['promosku/edit/(:any)'] = 'promosku/edit/$1';
+$route['promosku/delete/(:any)'] = 'promosku/delete/$1';
+$route['promosku/(:any)'] = 'promosku/view/$1';
+$route['promosku'] = 'promosku';
+
+$route['servicesku/create'] = 'servicesku/create';
+$route['servicesku/delete/(:any)'] = 'servicesku/delete/$1';
+$route['servicesku'] = 'servicesku';
+
 $route['news/create'] = 'news/create';
 $route['news/edit/(:any)'] = 'news/edit/$1';
 $route['news/delete/(:any)'] = 'news/delete/$1';

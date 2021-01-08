@@ -19,17 +19,21 @@ class Promo extends CI_Controller {
     $this->load->view('templates/footer');
   }
 
-  public function search($string = NULL){
+  public function search(){
     $data['title'] = 'Search results';
 
-    $data['promos'] = $this->promo_model->search_promos($string);
+    $data['promos'] = $this->promo_model->search_promos($_POST['search']);
 
     $this->load->view('templates/header', $data);
     $this->load->view('promo/index', $data);
     $this->load->view('templates/footer');
   }
 
-  public function view($keyword = NULL){
+  public function view($keyword){
+    if ($keyword == NULL){
+      show_404();
+    }
+
     $data['promo'] = $this->promo_model->get_promos($keyword);
 
     if (empty($data['promo'])){
@@ -49,11 +53,11 @@ class Promo extends CI_Controller {
 
     $data['title'] = 'Create a promo';
 
-    $this->form_validation->set_rules('keyword', 'Keyword', 'required|is_unique[PROMO.keyword]');
-    $this->form_validation->set_rules('name', 'Name', 'required');
+    $this->form_validation->set_rules('keyword', 'Keyword', 'required|is_unique[PROMO.keyword]|max_length[30]');
+    $this->form_validation->set_rules('name', 'Name', 'required|max_length[30]');
     $this->form_validation->set_rules('description', 'Description', 'required');
-    $this->form_validation->set_rules('expiry', 'Expiry', 'required|callback_datetime_valid', array('datetime_valid' => 'Invalid date received'));
-    $this->form_validation->set_rules('renewal', 'Renewal', 'required|numeric');
+    $this->form_validation->set_rules('expiry', 'Expiry', 'required|numeric|greater_than_equal_to[1]');
+    $this->form_validation->set_rules('renewal', 'Renewal', 'required|numeric|greater_than_equal_to[0]');
 
     if ($this->form_validation->run() === FALSE){
         $this->load->view('templates/header', $data);
@@ -67,17 +71,6 @@ class Promo extends CI_Controller {
     }
   }
 
-  public function datetime_valid($datetime){
-    $year = (int) substr($datetime, 0, 4);
-    $month = (int) substr($datetime, 5, 2);
-    $day = (int) substr($datetime, 8, 2);
-
-    $hour = (int) substr($datetime, 11, 2);
-    $min = (int) substr($datetime, 14, 2);
-
-    return checkdate($month, $day, $year) and ($hour <= 24) and ($min < 60);
-  }
-
   public function edit($keyword = NULL){
     $this->load->helper('form');
     $this->load->library('form_validation');
@@ -89,9 +82,9 @@ class Promo extends CI_Controller {
 
     $data['title'] = $data['promo']['keyword'];
 
-    $this->form_validation->set_rules('name', 'Name', 'required');
+    $this->form_validation->set_rules('name', 'Name', 'required|max_length[30]');
     $this->form_validation->set_rules('description', 'Description', 'required');
-    $this->form_validation->set_rules('expiry', 'Expiry', 'required|callback_datetime_valid', array('datetime_valid' => 'Invalid date received'));
+    $this->form_validation->set_rules('expiry', 'Expiry', 'required|numeric');
     $this->form_validation->set_rules('renewal', 'Renewal', 'required|numeric|greater_than_equal_to[0]');
 
     if ($this->form_validation->run() === FALSE){
@@ -111,7 +104,9 @@ class Promo extends CI_Controller {
     redirect('promo');
   }
 
-}
+  public function toggle($keyword = NULL){
+    $this->promo_model->toggle_promo($keyword);
+    redirect('promo');
+  }
 
-/* End of file Promo.php */
-/* Location: .//c/users/eizerr~1/appdata/local/temp/localhost.localdomain-76hrbi/Promo.php */
+}
