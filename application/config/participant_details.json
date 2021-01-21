@@ -1,86 +1,114 @@
 [
-   {
-      "name":"Retrieve from account",
-      "type_id":1,
-      "params":[
-         {
-            "name":"username",
-            "display_name":"Username",
-            "type":"string",
-            "is_required":true
-         },
-         {
-            "name":"password",
-            "display_name":"Password",
-            "type":"password",
-            "is_required":true
-         },
-         {
-            "name":"gauthcode",
-            "display_name":"Google Authenticator Code",
-            "type":"number",
-            "is_required":true
-         }
-      ]
-   },
-   {
-      "name":"Input details",
-      "type_id":2,
-      "params":[
-         {
-            "name":"full_name",
-            "display_name":"Full Name",
-            "type":"string",
-            "is_required":true
-         },
-         {
-            "name":"description",
-            "display_name":"Description",
-            "type":"textarea",
-            "is_required":false
-         },
-         {
-            "name":"birthdate",
-            "display_name":"Birthdate",
-            "type":"date",
-            "is_required":true
-         },
-         {
-            "name":"prefix",
-            "display_name":"Prefix",
-            "type":"enum",
-            "is_required":true,
-            "values":{
-               "mr":"Mr.",
-               "ms":"Ms.",
-               "dr":"Doctor."
-            }
-         },
-         {
-            "name":"has_isp",
-            "display_name":"Subscribed to an ISP",
-            "type":"enum",
-            "is_required":true
-         },
-         {
-            "name":"country",
-            "display_name":"Country",
-            "type":"enum",
-            "is_required":true,
-            "values":{
-               "brunei":"Brunei",
-               "burma":"Burma",
-               "cambodia":"Cambodia",
-               "timor_leste":"Timor-Leste",
-               "indonesia":"Indonesia",
-               "laos":"Laos",
-               "malaysia":"Malaysia",
-               "philippines":"Philippines",
-               "singapore":"Singapore",
-               "thailand":"Thailand",
-               "vietnam":"Vietnam"
-            }
-         }
-      ]
-   }
+	{
+		"name":"Retrieve from account",
+		"type_id":1,
+		"params":[
+			{
+				"target_node":"ACCOUNT.UNAME",
+				"name":"username",
+				"display_name":"Username",
+				"type":"string",
+				"is_required":true
+			},
+			{
+				"target_node":"ACCOUNT.PWORD",
+				"name":"password",
+				"display_name":"Password",
+				"type":"password",
+				"is_required":true
+			},
+			{
+				"target_node":"ACCOUNT.GAUTHCODE",
+				"name":"gauthcode",
+				"display_name":"Google Authenticator Code",
+				"type":"number",
+				"is_required":true
+			},
+			{
+				"target_node":"ACCOUNT.TERMS",
+				"name":"terms",
+				"display_name":"I accept the Terms and Conditions.",
+				"type":"bool",
+				"validation": "in_list[0,1]",
+				"is_required":true
+			}
+		]
+	},
+	{
+		"name":"Input details",
+		"type_id":2,
+		"params":[
+			{
+				"target_node":"INFO.NAME",
+				"name":"full_name",
+				"display_name":"Full Name",
+				"type":"string",
+				"is_required":true
+			},
+			{
+				"target_node":"INFO.DESC",
+				"name":"description",
+				"display_name":"Description",
+				"type":"textarea",
+				"is_required":false
+			},
+			{
+				"target_node":"INFO.BDAY",
+				"name":"birthdate",
+				"display_name":"Birthdate",
+				"type":"date",
+				"is_required":true
+			},
+			{
+				"target_node":"INFO.DATETIME",
+				"name":"datetime",
+				"display_name":"Datetime",
+				"type":"datetime",
+				"is_required":true
+			},
+			{
+				"target_node":"INFO.TIME",
+				"name":"time",
+				"display_name":"Time",
+				"type":"time",
+				"is_required":true
+			},
+			{
+				"target_node":"INFO.PREFIX",
+				"name":"prefix",
+				"display_name":"Prefix",
+				"type":"enum",
+				"is_required":true,
+				"source_type": "controller",
+				"source": "Prefix.get_prefixes"
+			},
+			{
+				"target_node":"INFO.ISP",
+				"name":"has_isp",
+				"display_name":"Subscribed to an ISP",
+				"type":"enum",
+				"is_required":true,
+				"source_type": "AJAX",
+				"source": "http://localhost:3000/values"
+			},
+			{
+				"target_node":"INFO.COUNTRY",
+				"name":"country",
+				"display_name":"Country",
+				"type":"enum",
+				"is_required":true,
+				"source_type": "model",
+				"source": "Country_model.get_countries"
+			},
+			{
+				"target_node":"INFO.DEVICE",
+				"name":"devices",
+				"display_name":"Devices",
+				"type":"list",
+				"data_type":"string",
+				"cardinality": 5,
+				"is_required":false
+			}
+		]
+	}
 ]

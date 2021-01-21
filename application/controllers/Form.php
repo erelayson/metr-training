@@ -2,79 +2,179 @@
 
 class Form extends CI_Controller {
 
-  public function index() {
-    $this->load->helper(array('form','url'));
-    $this->load->library('form_validation');
+	public function index() {
+		$this->load->helper(array('form','url','dependent_form_helper'));
+		$this->load->library('form_validation');
 
-    $fileName = $this->config->item('dependent_form_json');
+		$file_name = $this->config->item('dependent_form_json');
+		$form_JSON = file_get_contents("application/config/" . $file_name);
+		$form_array = $this->parse_JSON($form_JSON);
+		if(empty($form_array)) {
+			exit;
+		}
 
-    $data['formJSON'] = file_get_contents("application/config/" . $fileName);
+		$data['form_controller'] = $this;
+		$data['required_array'] = build_required_array($form_array);
+		$data['form_array'] = $form_array;
 
-    $formJSON = json_decode($data['formJSON'], true);
+		if ($_SERVER['REQUEST_METHOD'] == "POST") {
+			$type_id = trim($this->input->post('targetSelect'));
+			$selected_form_array = $this->get_selected_form_array($form_array, $type_id);
+			
+			$errors = $this->validate_form($selected_form_array);
 
-    $this->form_validation->set_rules('targetSelect', 'Participant Details', 'required');
+			if (!empty($errors)){
+				$data['type_id'] = $type_id;
+				$data['values'] = $_POST;
+				$data['error_array'] = $errors;
+				$this->load->view('form/survey', $data);
+				return;
+			}
 
-    if (json_last_error() == JSON_ERROR_NONE){
-      // Check if the json file follows the format for generating a form
-      // for ($i=0; $i < count($formJSON); $i++) { 
-      //   echo $formJSON[$i]['name'] . " " . $formJSON[$i]['type_id'] . "<br/>";
-      //   for ($j=0; $j < count($formJSON[$i]['params']); $j++) { 
-      //     echo $formJSON[$i]['params'][$j]['name'] . " " . $formJSON[$i]['params'][$j]['is_required'];
-      //     echo "<br/>";
-      //   }
-      //   echo "<br/>";
-      // }
+			echo "<pre>";
+			print_r($_POST);
+			echo "</pre>";
 
-      if ($this->form_validation->run() === FALSE){
-        $this->load->view('form/survey', $data);
+			$result = $this->result_to_json($form_array, $_POST);
+			echo "<pre>";
+			print_r($result);
+			echo "</pre>";
 
-      }
-      else{
-        $errorList = "";
-        for ($i=0; $i < count($formJSON); $i++) {
-          if ($_REQUEST['targetSelect'] == $formJSON[$i]['type_id']){
-            for ($j=0; $j < count($formJSON[$i]['params']); $j++) {
-              if ($formJSON[$i]['params'][$j]['is_required']) {
-                if (array_key_exists($formJSON[$i]['params'][$j]['name'], $_REQUEST)) {
-                  if ($_REQUEST[$formJSON[$i]['params'][$j]['name']] == "") {
-                    $errorList .= $formJSON[$i]['params'][$j]['name'] . " cannot be null<br/>";
-                  }
-                } else {
-                  $errorList .= $formJSON[$i]['params'][$j]['name'] . " cannot be null<br/>";
-                }
-              }
-            }
-          }
-        }
-        if($errorList){
-          echo $errorList;
-        } else {
-          print_r($_REQUEST);
-        }
-      }
-    } else {
-      echo $fileName . " is not a valid JSON file.";
-      switch (json_last_error()) {
-        case JSON_ERROR_DEPTH:
-          echo " Maximum stack depth exceeded.";
-        break;
-        case JSON_ERROR_STATE_MISMATCH:
-          echo " Underflow or the modes mismatch.";
-        break;
-        case JSON_ERROR_CTRL_CHAR:
-          echo " Unexpected control character found.";
-        break;
-        case JSON_ERROR_SYNTAX:
-          echo " Syntax error, malformed JSON.";
-        break;
-        case JSON_ERROR_UTF8:
-          echo " Malformed UTF-8 characters, possibly incorrectly encoded.";
-        break;
-        default:
-          echo " Unknown error.";
-        break;
-      }
-    }
-  }
+			exit;
+		}
+
+		$data['type_id'] = "";
+		$data['values'] = NULL;
+		$data['error_array'] = NULL;
+		$this->load->view('form/survey', $data);
+	}
+
+	private function parse_JSON($form_JSON) {
+		$form_array = json_decode($form_JSON, TRUE);
+
+		if (json_last_error() != JSON_ERROR_NONE) {
+			echo "JSON file could not be parsed: ";
+			switch (json_last_error()) {
+				case JSON_ERROR_DEPTH:
+					echo "Maximum stack depth exceeded.";
+				break;
+				case JSON_ERROR_STATE_MISMATCH:
+					echo "Underflow or the modes mismatch.";
+				break;
+				case JSON_ERROR_CTRL_CHAR:
+					echo "Unexpected control character found.";
+				break;
+				case JSON_ERROR_SYNTAX:
+					echo "Syntax error, malformed JSON.";
+				break;
+				case JSON_ERROR_UTF8:
+					echo "Malformed UTF-8 characters, possibly incorrectly encoded.";
+				break;
+				default:
+					echo "Unknown error.";
+				break;
+			}
+		} else {
+			return $form_array;
+		}
+	}
+
+	// Returns the dependent form array with the given type ID
+	private function get_selected_form_array($form_array, $type_id) {
+		foreach ($form_array as $form_key => $form_value) {
+			if ($type_id == $form_value['type_id']){
+				return $form_value;
+			}
+		}
+	}
+
+	private function validate_form($selected_form_array) {
+		$errors = array();
+
+		// Add main form validation (experience)
+		$this->form_validation->set_rules('experience', 'Experience', 'required');
+		// Set validation rules based on the selected type
+		set_dependent_form_validation_rules($selected_form_array['params']);
+		// Override the default message for in_list rules
+		$this->form_validation->set_message('in_list', 'Please select a valid option in the list');
+
+		$this->set_callback_messages();
+
+		$res = $this->form_validation->run();
+		if (!$res){
+			$errors = retrieve_error_messages($selected_form_array['params']);
+		}
+		return $errors;
+	}
+
+	private function set_callback_messages() {
+		$this->form_validation->set_message('password_strength_check', 'Password must be at least 8 characters');
+		$this->form_validation->set_message('date_valid', 'Please enter a valid date');
+		$this->form_validation->set_message('time_valid', 'Please enter a valid time');
+		$this->form_validation->set_message('datetime_valid', 'Please enter a valid date and time');
+	}
+
+	public function build_select_options($form_array, $type_id = NULL) {
+		$option_HTML = generate_option('', ' -- select an option -- ', 'selected', 'disabled');
+		foreach ($form_array as $form_key => $form_value) {
+			$selected = mark_option($form_value['type_id'], $type_id, "selected");
+			$option_HTML .= generate_option($form_value['type_id'], $form_value['name'], $selected);
+		}
+		return $option_HTML;
+	}
+
+	private function result_to_json($form_array, $result) {
+		$json = array();
+
+		foreach ($form_array as $form_key => $form_value) {
+			if ($result['targetSelect'] == $form_value['type_id']){
+				// Traverse target_nodes
+				foreach ($form_value['params'] as $param_key => $param_value) {
+					$model_property = explode('.', $param_value['target_node']);
+					$json[$model_property[0]][$model_property[1]] = $result[$param_value['name']];
+				}
+			}
+		}
+
+		// Hardcoded main form entry (experience)
+		$json[$model_property[0]]['EXPERIENCE'] = $result['experience'];
+
+		return $json;
+	}
+
+	// Placeholder function for the password validator
+	public function password_strength_check($str){
+		if(strlen($str) < 8) {
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	public function date_valid($date) {
+		$day = (int) substr($date, 0, 2);
+    $month = (int) substr($date, 3, 2);
+    $year = (int) substr($date, 6, 4);
+    return checkdate($month, $day, $year);
+	}
+
+	public function time_valid($time) {
+		$dateObj = DateTime::createFromFormat('H:i', $time);
+		if ($dateObj == FALSE) { 
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	public function datetime_valid($datetime) {
+		$dateObj = DateTime::createFromFormat('Y-m-d\TH:i', $datetime);
+		if ($dateObj == FALSE) { 
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	// public function validate_list($list, $type) {
+	// 	return $type == 'number';
+	// }
 
 }
