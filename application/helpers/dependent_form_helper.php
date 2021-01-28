@@ -107,51 +107,20 @@
 				return "integer|greater_than_equal_to[PHP_INT_MIN]|less_than_equal_to[PHP_INT_MAX]";
 
 			case DEPFORM_TYPE_PASSWORD:
-				return "callback_password_strength_check";
+				return "password_strength_check";
 
 			case DEPFORM_TYPE_DATE:
-				return "callback_date_valid";
+				return "date_valid";
 
 			case DEPFORM_TYPE_TIME:
-				return "callback_time_valid";
+				return "time_valid";
 
 			case DEPFORM_TYPE_DATETIME:
-				return "callback_datetime_valid";
+				return "datetime_valid";
 
 			default:
 				return "";
 		}
-	}
-
-	// Placeholder function for the password validator
-	function password_strength_check($str){
-		if(strlen($str) < 8) {
-			return FALSE;
-		}
-		return TRUE;
-	}
-
-	function date_valid($date) {
-		$day = (int) substr($date, 0, 2);
-    $month = (int) substr($date, 3, 2);
-    $year = (int) substr($date, 6, 4);
-    return checkdate($month, $day, $year);
-	}
-
-	function time_valid($time) {
-		$dateObj = DateTime::createFromFormat('H:i', $time);
-		if ($dateObj == FALSE) { 
-			return FALSE;
-		}
-		return TRUE;
-	}
-
-	function datetime_valid($datetime) {
-		$dateObj = DateTime::createFromFormat('Y-m-d\TH:i', $datetime);
-		if ($dateObj == FALSE) { 
-			return FALSE;
-		}
-		return TRUE;
 	}
 
 	function retrieve_error_messages($params) {
@@ -163,7 +132,7 @@
 			// If type is list, assign the array of errors
 			if ($param_value['type'] == DEPFORM_TYPE_LIST) {
 				for($i = 0; $i < $param_value['cardinality']; $i++) {
-						$errors[$name][$key] = form_error($name."[$i]");
+						$errors[$name][$i] = form_error($name."[$i]");
 					}
 			} else {
 				$errors[$name] = form_error($name);

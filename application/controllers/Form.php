@@ -142,21 +142,4 @@ class Form extends CI_Controller {
 		return $json;
 	}
 
-	// Mapping of the callback functions back to the helper file
-	public function password_strength_check($str){
-		return password_strength_check($str);
-	}
-
-	public function date_valid($date) {
-		return date_valid($date);
-	}
-
-	public function time_valid($time) {
-		return time_valid($time);
-	}
-
-	public function datetime_valid($datetime) {
-		return datetime_valid($datetime);
-	}
-
 }
