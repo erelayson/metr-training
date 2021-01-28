@@ -150,3 +150,36 @@ DEPFORM_TYPE_LIST | list_field
 
 #### Return Values
 ##### No value is returned.
+
+
+## dependent_form_selector.js
+
+### updateDependentForm 
+##### — hide all div children of the div with id "targetForm", then show the div whose id is equal to the value of the currently selected option in the dropdown with id "targetSelect"
+
+#### Description
+```js 
+updateDependentForm()
+```
+
+#### Parameters
+##### No parameters are passed. 
+
+#### Return Values
+##### No value is returned.
+
+
+### updateRequiredElements 
+##### — remove the required attribute of all tags in the formTags array (input, select, and textarea), traverse through the requiredArray and set all tags with the name attribute equivalent to the elements in the array as required
+
+#### Description
+```js 
+updateRequiredElements(string currActive, array requiredArray)
+```
+
+#### Parameters
+##### currActive: the value of the currently selected option in the dropdown with id "targetSelect"
+##### requiredArray: an array using the type_ids as the keys and an array containing the names of the required parameters as the value
+
+#### Return Values
+##### No value is returned.
