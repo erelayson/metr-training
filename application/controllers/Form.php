@@ -142,39 +142,21 @@ class Form extends CI_Controller {
 		return $json;
 	}
 
-	// Placeholder function for the password validator
+	// Mapping of the callback functions back to the helper file
 	public function password_strength_check($str){
-		if(strlen($str) < 8) {
-			return FALSE;
-		}
-		return TRUE;
+		return password_strength_check($str);
 	}
 
 	public function date_valid($date) {
-		$day = (int) substr($date, 0, 2);
-    $month = (int) substr($date, 3, 2);
-    $year = (int) substr($date, 6, 4);
-    return checkdate($month, $day, $year);
+		return date_valid($date);
 	}
 
 	public function time_valid($time) {
-		$dateObj = DateTime::createFromFormat('H:i', $time);
-		if ($dateObj == FALSE) { 
-			return FALSE;
-		}
-		return TRUE;
+		return time_valid($time);
 	}
 
 	public function datetime_valid($datetime) {
-		$dateObj = DateTime::createFromFormat('Y-m-d\TH:i', $datetime);
-		if ($dateObj == FALSE) { 
-			return FALSE;
-		}
-		return TRUE;
+		return datetime_valid($datetime);
 	}
-
-	// public function validate_list($list, $type) {
-	// 	return $type == 'number';
-	// }
 
 }

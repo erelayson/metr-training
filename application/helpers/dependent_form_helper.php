@@ -1,26 +1,29 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 	
-	define("MODEL", "model");
-	define("CONTROLLER", "controller");
-	define("AJAX", "AJAX");
+	define("DEPFORM_SRCTYPE_MODEL", "model");
+	define("DEPFORM_SRCTYPE_CONTROLLER", "controller");
+	define("DEPFORM_SRCTYPE_AJAX", "AJAX");
 
-	define("DEPFORM_TEXTAREA", "textarea");
-	define("DEPFORM_ENUM", "enum");
-	define("DEPFORM_BOOLEAN", "bool");
-	define("DEPFORM_RADIO", "radio");
-	define("DEPFORM_DROPDOWN", "dropdown");
-	define("DEPFORM_DATE", "date");
-	define("DEPFORM_DATETIME", "datetime");
-	define("DEPFORM_STRING", "string");
-	define("DEPFORM_NUMBER", "number");
-	define("DEPFORM_INT", "integer");
-	define("DEPFORM_FLOAT", "float");
-	define("DEPFORM_PASSWORD", "password");
-	define("DEPFORM_TIME", "time");
-	define("DEPFORM_FILE_UPLOAD", "file_upload");
-	define("DEPFORM_DISPLAY_ONLY", "display_only");
-	define("DEPFORM_HIDDEN", "hidden");
-	define("DEPFORM_LIST", "list");
+	define("DEPFORM_TYPE_TEXTAREA", "textarea");
+	define("DEPFORM_TYPE_ENUM", "enum");
+	define("DEPFORM_TYPE_BOOLEAN", "bool");
+	define("DEPFORM_TYPE_RADIO", "radio");
+	define("DEPFORM_TYPE_DROPDOWN", "dropdown");
+	define("DEPFORM_TYPE_DATE", "date");
+	define("DEPFORM_TYPE_DATETIME", "datetime");
+	define("DEPFORM_TYPE_STRING", "string");
+	define("DEPFORM_TYPE_NUMBER", "number");
+	define("DEPFORM_TYPE_INT", "integer");
+	define("DEPFORM_TYPE_FLOAT", "float");
+	define("DEPFORM_TYPE_PASSWORD", "password");
+	define("DEPFORM_TYPE_TIME", "time");
+	define("DEPFORM_TYPE_FILE_UPLOAD", "file_upload");
+	define("DEPFORM_TYPE_DISPLAY_ONLY", "display_only");
+	define("DEPFORM_TYPE_HIDDEN", "hidden");
+	define("DEPFORM_TYPE_LIST", "list");
+
+	define("DEPFORM_TYPE_DEFAULT_CARDINALITY", 3);
+	define("DEPFORM_TYPE_DROPDOWN_MIN_OPTIONS", 10);
 
 	function build_required_array($form_array) {
 		$required_array = array();
@@ -48,14 +51,14 @@
 				$rules = $param_value['validation'];
 			} else {
 				$source_type = $param_value['source_type'] ?? NULL;
-				$data_type = $param_value['data_type'] ?? NULL;
+				$list_data_type = $param_value['list_data_type'] ?? NULL;
 
 				$choices = array();
-				if (in_array($param_value['type'], array(DEPFORM_ENUM, DEPFORM_BOOLEAN, DEPFORM_RADIO, DEPFORM_DROPDOWN))){
+				if (in_array($param_value['type'], array(DEPFORM_TYPE_ENUM, DEPFORM_TYPE_BOOLEAN, DEPFORM_TYPE_RADIO, DEPFORM_TYPE_DROPDOWN))){
 					$choices = get_options_from_source($source_type, $param_value);
 				}
 
-				$rules = get_default_rules($param_value['type'], $choices, $data_type);
+				$rules = get_default_rules($param_value['type'], $choices, $list_data_type);
 			}
 
 			if ($param_value['is_required']) {
@@ -67,9 +70,9 @@
 
 			if(!empty($rules)){
 				// Set the rules for each given input if list type
-				if($param_value['type'] == DEPFORM_LIST) {
-					foreach ($ci->input->post('devices') as $key => $value) {
-						$ci->form_validation->set_rules($name."[$key]", $display_name, $rules);
+				if($param_value['type'] == DEPFORM_TYPE_LIST) {
+					for($i = 0; $i < $param_value['cardinality']; $i++) {
+						$ci->form_validation->set_rules($name."[$i]", $display_name, $rules);
 						echo $rules;
 					}
 				} else {
@@ -79,45 +82,76 @@
 		}
 	}
 
-	function get_default_rules($type, $choices = array(), $data_type = NULL) {
-		if ($type == DEPFORM_LIST) {
-			$type = $data_type;
+	function get_default_rules($type, $choices = array(), $list_data_type = NULL) {
+		if ($type == DEPFORM_TYPE_LIST) {
+			$type = $list_data_type;
 		}
 		
 		switch ($type) {
 
-			case DEPFORM_DROPDOWN:
-			case DEPFORM_RADIO:
-			case DEPFORM_ENUM:
+			case DEPFORM_TYPE_DROPDOWN:
+			case DEPFORM_TYPE_RADIO:
+			case DEPFORM_TYPE_ENUM:
 				return "in_list[".implode(array_keys($choices),',')."]";
 
-			case DEPFORM_BOOLEAN:
+			case DEPFORM_TYPE_BOOLEAN:
 				return "in_list[0,1]";
 
-			case DEPFORM_NUMBER:
+			case DEPFORM_TYPE_NUMBER:
 				return "numeric|greater_than_equal_to[-PHP_FLOAT_MAX]|less_than_equal_to[PHP_FLOAT_MAX]";
 
-			case DEPFORM_FLOAT:
+			case DEPFORM_TYPE_FLOAT:
 				return "decimal|greater_than_equal_to[-PHP_FLOAT_MAX]|less_than_equal_to[PHP_FLOAT_MAX]";
 
-			case DEPFORM_INT:
+			case DEPFORM_TYPE_INT:
 				return "integer|greater_than_equal_to[PHP_INT_MIN]|less_than_equal_to[PHP_INT_MAX]";
 
-			case DEPFORM_PASSWORD:
+			case DEPFORM_TYPE_PASSWORD:
 				return "callback_password_strength_check";
 
-			case DEPFORM_DATE:
+			case DEPFORM_TYPE_DATE:
 				return "callback_date_valid";
 
-			case DEPFORM_TIME:
+			case DEPFORM_TYPE_TIME:
 				return "callback_time_valid";
 
-			case DEPFORM_DATETIME:
+			case DEPFORM_TYPE_DATETIME:
 				return "callback_datetime_valid";
 
 			default:
 				return "";
 		}
+	}
+
+	// Placeholder function for the password validator
+	function password_strength_check($str){
+		if(strlen($str) < 8) {
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	function date_valid($date) {
+		$day = (int) substr($date, 0, 2);
+    $month = (int) substr($date, 3, 2);
+    $year = (int) substr($date, 6, 4);
+    return checkdate($month, $day, $year);
+	}
+
+	function time_valid($time) {
+		$dateObj = DateTime::createFromFormat('H:i', $time);
+		if ($dateObj == FALSE) { 
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	function datetime_valid($datetime) {
+		$dateObj = DateTime::createFromFormat('Y-m-d\TH:i', $datetime);
+		if ($dateObj == FALSE) { 
+			return FALSE;
+		}
+		return TRUE;
 	}
 
 	function retrieve_error_messages($params) {
@@ -127,12 +161,12 @@
 		foreach ($params as $param_key => $param_value) {
 			$name = $param_value['name'];
 			// If type is list, assign the array of errors
-			if ($param_value['type'] == DEPFORM_LIST) {
-				foreach ($ci->input->post('devices') as $key => $value) {
-						$errors[$name][$key] = form_error($name."[$key]", "<span class='error'>", "</span>");
+			if ($param_value['type'] == DEPFORM_TYPE_LIST) {
+				for($i = 0; $i < $param_value['cardinality']; $i++) {
+						$errors[$name][$key] = form_error($name."[$i]");
 					}
 			} else {
-				$errors[$name] = form_error($name, "<span class='error'>", "</span>");
+				$errors[$name] = form_error($name);
 			}
 		}
 		return $errors;
@@ -154,10 +188,10 @@
 				$is_required = $param_value['is_required'];
 
 				$source_type = $param_value['source_type'] ?? NULL;
-				$cardinality = $param_value['cardinality'] ?? 3;
+				$cardinality = $param_value['cardinality'] ?? DEPFORM_TYPE_DEFAULT_CARDINALITY;
 
 				$options = array();
-				if ($type == "enum" || $type == "dropdown" || $type == "radio") {
+				if ($type == DEPFORM_TYPE_ENUM || $type == DEPFORM_TYPE_DROPDOWN || $type == DEPFORM_TYPE_RADIO) {
 					$options = get_options_from_source($source_type, $param_value);
 				}
 
@@ -175,7 +209,7 @@
 
 	function get_options_from_source($source_type, $param_value) {
 		switch ($source_type) {
-			case MODEL:
+			case DEPFORM_SRCTYPE_MODEL:
 				$model_method = explode('.', $param_value['source']);
 				$model_string = $model_method[0];
 				$method_string = $model_method[1];
@@ -192,7 +226,7 @@
 				break;
 			
 			// Change to a method of the current controller (later)
-			case CONTROLLER:
+			case DEPFORM_SRCTYPE_CONTROLLER:
 				$controller_method = explode('.', $param_value['source']);
 				$controller_string = $controller_method[0];
 				$method_string = $controller_method[1];
@@ -207,7 +241,7 @@
 				}
 				break;
 
-			case AJAX:
+			case DEPFORM_SRCTYPE_AJAX:
 				$options = curl_get($param_value['source']);
 				break;
 
@@ -235,13 +269,13 @@
 	function to_tag($name, $display_name, $type, $cardinality, $is_required, $choices = array(), $value = "", $error = "") {
 		div_open('', 'form-group');
 		switch ($type) {
-			case DEPFORM_TEXTAREA:
+			case DEPFORM_TYPE_TEXTAREA:
 				textarea_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_ENUM:
+			case DEPFORM_TYPE_ENUM:
 				if (isset($choices)){
-					if (count($choices) < 10) {
+					if (count($choices) < DEPFORM_TYPE_DROPDOWN_MIN_OPTIONS) {
 						radio_field($name, $display_name, $value, $choices, $error);
 					} else {
 						dropdown_field($name, $display_name, $choices, $value, $error);
@@ -251,11 +285,11 @@
 				}
 				break;
 
-			case DEPFORM_BOOLEAN:
+			case DEPFORM_TYPE_BOOLEAN:
 				boolEANan_field($name, $display_name, $value, $error, $options = array());
 				break;
 
-			case DEPFORM_RADIO:
+			case DEPFORM_TYPE_RADIO:
 				if (isset($choices)){
 					radio_field($name, $display_name, $value, $choices, $error);
 				} else {
@@ -263,7 +297,7 @@
 				}
 				break;
 
-			case DEPFORM_DROPDOWN:
+			case DEPFORM_TYPE_DROPDOWN:
 				if (isset($choices)){
 					dropdown_field($name, $display_name, $choices, $value, $error);
 				} else {
@@ -271,51 +305,51 @@
 				}
 				break;
 
-			case DEPFORM_DATE:
+			case DEPFORM_TYPE_DATE:
 				date_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_DATETIME:
+			case DEPFORM_TYPE_DATETIME:
 				datetime_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_STRING:
+			case DEPFORM_TYPE_STRING:
 				text_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_NUMBER:
+			case DEPFORM_TYPE_NUMBER:
 				number_field($name, $display_name, $value, $error, array('step'=>PHP_FLOAT_MIN));
 				break;
 
-			case DEPFORM_INT:
+			case DEPFORM_TYPE_INT:
 				number_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_FLOAT:
+			case DEPFORM_TYPE_FLOAT:
 				number_field($name, $display_name, $value, $error, array('step'=>PHP_FLOAT_MIN));
 				break;
 
-			case DEPFORM_PASSWORD:
+			case DEPFORM_TYPE_PASSWORD:
 				password_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_TIME:
+			case DEPFORM_TYPE_TIME:
 				time_field($name, $display_name, $value, $error);
 				break;
 
-			case DEPFORM_FILE_UPLOAD:
+			case DEPFORM_TYPE_FILE_UPLOAD:
 				file_upload_field($name, $display_name, $error);
 				break;
 
-			case DEPFORM_DISPLAY_ONLY:
+			case DEPFORM_TYPE_DISPLAY_ONLY:
 				display_only_field($display_name, $value);
 				break;
 
-			case DEPFORM_HIDDEN:
+			case DEPFORM_TYPE_HIDDEN:
 				hidden_field($name, $value);
 				break;
 
-			case DEPFORM_LIST:
+			case DEPFORM_TYPE_LIST:
 				list_field($name, $display_name, $value, $error, $cardinality);
 				break;
 
@@ -323,10 +357,6 @@
 				echo "Error generating $name tag. Unknown field type $type in the JSON file.";
 		}
 		div_close();
-	}
-
-	function div_wrapper($HTML, $id = '', $class = '', $style = '') {
-		return "<div id='$id' class='$class' style='$style'>$HTML</div>";
 	}
 
 	function div_open($id = '', $class = '', $style = '') {
@@ -416,7 +446,7 @@
 		echo "<input class='form-control' value='$value' name='$name' type='hidden'/>";
 	}
 
-	function list_field($name, $label, $value, $error, $cardinality = 3, $options = array()) {
+	function list_field($name, $label, $value, $error, $cardinality = DEPFORM_TYPE_DEFAULT_CARDINALITY, $options = array()) {
 		echo build_label($name, $label);
 		for ($i=0; $i < $cardinality; $i++) { 
 			echo "<input class='form-control' value='$value[$i]' name='$name"."[]'/>$error[$i]";
