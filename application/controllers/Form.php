@@ -40,6 +40,7 @@ class Form extends CI_Controller {
 			print_r($result);
 			echo "</pre>";
 
+			$this->view();
 			exit;
 		}
 
@@ -47,6 +48,10 @@ class Form extends CI_Controller {
 		$data['values'] = NULL;
 		$data['error_array'] = NULL;
 		$this->load->view('form/survey', $data);
+	}
+
+	public function view() {
+		echo "view time";
 	}
 
 	private function parse_JSON($form_JSON) {
@@ -95,8 +100,6 @@ class Form extends CI_Controller {
 		$this->form_validation->set_rules('experience', 'Experience', 'required');
 		// Set validation rules based on the selected type
 		set_dependent_form_validation_rules($selected_form_array['params']);
-		// Override the default message for in_list rules
-		$this->form_validation->set_message('in_list', 'Please select a valid option in the list');
 
 		$res = $this->form_validation->run();
 		if (!$res){

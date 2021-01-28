@@ -255,7 +255,7 @@
 				break;
 
 			case DEPFORM_TYPE_BOOLEAN:
-				boolEANan_field($name, $display_name, $value, $error, $options = array());
+				boolean_field($name, $display_name, $value, $error, $options = array());
 				break;
 
 			case DEPFORM_TYPE_RADIO:
@@ -376,7 +376,7 @@
 		echo build_label($name, $label) . "<input class='form-control' value='$value' name='$name' type='time'/>" . $error;
 	}
 
-	function boolEANan_field($name, $label, $value, $error, $options = array()) {
+	function boolean_field($name, $label, $value, $error, $options = array()) {
 		$choices = array(True => 'Yes', FALSE => 'No');
 		echo radio_field($name, $label, $value, $choices, $error, $options);
 	}
