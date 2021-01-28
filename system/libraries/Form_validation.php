@@ -1616,9 +1616,9 @@ class CI_Form_validation {
 	 */
 	function date_valid($date) 
 	{
-		$day = (int) substr($date, 0, 2);
-		$month = (int) substr($date, 3, 2);
-		$year = (int) substr($date, 6, 4);
+		$day = (int) substr($date, 8, 2);
+		$month = (int) substr($date, 5, 2);
+		$year = (int) substr($date, 0, 4);
 		return checkdate($month, $day, $year);
 	}
 

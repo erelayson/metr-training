@@ -98,20 +98,11 @@ class Form extends CI_Controller {
 		// Override the default message for in_list rules
 		$this->form_validation->set_message('in_list', 'Please select a valid option in the list');
 
-		$this->set_callback_messages();
-
 		$res = $this->form_validation->run();
 		if (!$res){
 			$errors = retrieve_error_messages($selected_form_array['params']);
 		}
 		return $errors;
-	}
-
-	private function set_callback_messages() {
-		$this->form_validation->set_message('password_strength_check', 'Password must be at least 8 characters');
-		$this->form_validation->set_message('date_valid', 'Please enter a valid date');
-		$this->form_validation->set_message('time_valid', 'Please enter a valid time');
-		$this->form_validation->set_message('datetime_valid', 'Please enter a valid date and time');
 	}
 
 	public function build_select_options($form_array, $type_id = NULL) {
