@@ -1,5 +1,57 @@
 # Dependent Form Helper
 
+## JSON structure for the dependent form data
+```javascript
+[
+   {
+      "name":"human-readable type name",
+      "type_id":"id of type",
+      "params":[
+         {
+            "target_node":[
+               "root object of type in nf_legacy_service_t format:(model.property)"
+            ],
+            "name":"input name in form",
+            "display_name":"form label",
+            "type":"textarea|enum|bool|radio|dropdown|date|datetime|string|number|integer|float|password|time|file_upload|display_only|hidden|list",
+            "validation":"CI-compatible validation",
+            "source":"model_name.function_name | controller_name.function_name | url",
+            "source_type":"model | controller | AJAX | AJAX_dynamic",
+            "is_required":"true|false",
+            "values":{
+               "key":"value pairs for enum | radio | dropdown types"
+            },
+            "params":{ 
+                similar to the parent params node, for table types
+            }
+         }
+      ],
+      "additional_params":[
+         {
+            "name":"human-readable additional_params name",
+						"is_tabular":"true|false",
+						"method":{
+							 "create":"callback function for create",
+							 "edit":"callback function for edit",
+							 "delete":"callback function for delete",
+							 "label":"other callback function reference"
+						},
+            "params":{
+               "target":"root object of type in nf_legacy_service_t format:(model.property)",
+               "name":"input name in form",
+               "display_name":"form label",
+               "type":"textarea|enum|bool|radio|dropdown|date|datetime|string|number|integer|float|password|time|file_upload|display_only|hidden|list",
+               "validation":"CI-compatible validation",
+               "source":"model_name.function_name",
+               "is_required":"true|false",
+            }
+         }
+      ]
+   }
+]
+```
+
+
 ## dependent_form_helper.php
 
 ### build_required_array 
