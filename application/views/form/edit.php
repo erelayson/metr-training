@@ -14,28 +14,29 @@
 			}
 		</style>
 
-		<title>Add NF Legacy Services DUO</title>
+		<title>Edit NF Legacy Services DUO</title>
 	</head>
 	<body>
-		<h1>Add NF Legacy Services DUO</h1>
+		<h1>Edit NF Legacy Services DUO</h1>
 
 		<!-- Call main form tags using form helpers -->
-		<?php echo form_open('form/index'); ?>
+		<?php echo form_open('form/edit'); ?>
 			<div class="container">
 				<div class="form-group">
-					<?= text_field('name', 'Name', set_value('name'), form_error('name')) ?>
-					<?= textarea_field('description', 'Description', set_value('description'), form_error('description')); ?>
-					<?= text_field('keyword', 'Keyword', set_value('keyword'), form_error('keyword')) ?>
-
-				</div><br />
+					<?= text_field('name', 'Name', $values['name'], form_error('name')) ?>
+				</div>
 				<div class="form-group">
-					<?= build_label('targetSelect', 'Type') ?>
-					<select class="form-control" id="targetSelect" name="targetSelect" required>
-						<?= $form_controller->build_select_options($form_array, $type_id) ?>
-					</select>
-				</div><br />
-				<?php build_dependent_form("targetForm", $form_array, $values, $error_array) ?>
-				<br />
+					<?= textarea_field('description', 'Description', $values['description'], form_error('description')); ?>
+				</div>
+				<div class="form-group">
+					<?= display_only_field('Keyword', $values['keyword']) ?>
+					<?= hidden_field('keyword', $values['keyword']) ?>
+				</div>
+				<div class="form-group">
+					<?= display_only_field($selector_display_name, $selector_value) ?>
+					<?= hidden_field($selector_name, $values[$selector_name]) ?>
+				</div>
+				<?php generate_HTML_from_params($params, $values, $error_array) ?>
 				<button type="submit" class="btn btn-primary">Submit</button>
 			</div>
 		</form>
@@ -45,12 +46,6 @@
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 		<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-
-		<script type="text/javascript">
-			function getRequiredArray() {
-				return <?= json_encode($required_array) ?>;
-			}
-		</script>
 		<script src="<?php echo base_url('js/dependent_form_selector.js'); ?>"></script>
 		
 	</body>

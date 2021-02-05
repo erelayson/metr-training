@@ -470,4 +470,4 @@ $config['time_reference'] = 'local';
 */
 $config['proxy_ips'] = '';
 
-$config['dependent_form_json'] = "participant_details.json";
+$config['dependent_form_json'] = "duo_data.json";

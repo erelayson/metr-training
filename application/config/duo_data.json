@@ -1,0 +1,216 @@
+[
+	 {
+			"name":"DUO",
+			"type_id":1,
+			"params":[
+				 {
+						"target_node":"INFO.SWEDEN_OFFER",
+						"name":"sweden_offer",
+						"display_name":"Sweden Offer",
+						"type":"enum",
+						"is_required":true,
+						"values":{
+							 "sweden_offer1":"Sweden Offer 1 (111)"
+						}
+				 },
+				 {
+						"target_node":"INFO.ACE_TARIFF_PLAN",
+						"name":"ace_tariff_plan",
+						"display_name":"ACE Tariff Plan",
+						"type":"enum",
+						"is_required":true,
+						"values":{
+							 "ace_batangas":"ACE_Batangas"
+						}
+				 },
+				 {
+						"target_node":"INFO.ALG_ZONE_SERVICE_NAME",
+						"name":"alg_zone_service_name",
+						"display_name":"ALG Zone Service Name",
+						"type":"string",
+						"is_required":true
+				 },
+				 {
+						"target_node":"INFO.VN_POOL_ID",
+						"name":"vn_pool_id",
+						"display_name":"VN Pool ID",
+						"type":"integer",
+						"is_required":true
+				 },
+				 {
+						"target_node":"INFO.VN_POOL_AREA_CODE",
+						"name":"vn_pool_area_code",
+						"display_name":"VN Pool Area Code",
+						"type":"integer",
+						"is_required":true
+				 },
+				 {
+						"target_node":"INFO.BRANDS",
+						"name":"brands",
+						"display_name":"Brands",
+						"type":"table",
+						"params":[
+							 {
+									"target_node":"SKU.KEYWORD",
+									"name":"keyword",
+									"display_name":"Keyword",
+									"type":"string",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.NAME",
+									"name":"name",
+									"display_name":"Name",
+									"type":"string",
+									"is_required":true
+							 }
+						]
+				 },
+				 {
+						"target_node":"INFO.UNLIMITED",
+						"name":"unlimited",
+						"display_name":"Unlimited?",
+						"type":"enum",
+						"is_required":false,
+						"values" : {
+							"yes":"Yes",
+							"no":"No"
+						}
+				 },
+				 {
+						"target_node":"INFO.ALLOWANCE_UNIT",
+						"name":"allowance_unit",
+						"display_name":"Allowance Unit",
+						"type":"enum",
+						"is_required":false,
+						"values" : {
+							"sms":"SMS",
+							"voice":"Voice"
+						}
+				 }
+			],
+			"additional_params":[
+				 {
+						"name":"SKUs",
+						"is_tabular":true,
+						"actions":{
+							 "create":"create_sku",
+							 "edit":"edit_sku",
+							 "delete":"delete_sku"
+						},
+						"params":[
+							 {
+									"target_node":"SKU.KEYWORD",
+									"name":"keyword",
+									"display_name":"Keyword",
+									"type":"string",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.NAME",
+									"name":"name",
+									"display_name":"Name",
+									"type":"string",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.DESCRIPTION",
+									"name":"description",
+									"display_name":"Description",
+									"type":"textarea",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.FOR_EXTEND",
+									"name":"for_extend",
+									"display_name":"For Extend",
+									"type":"string",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.FUP_AMOUNT",
+									"name":"fup_amount",
+									"display_name":"FUP Amount",
+									"type":"float",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.WALLET_AMOUNT",
+									"name":"wallet_amount",
+									"display_name":"Wallet Amount",
+									"type":"float",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.CALLS_HOUR",
+									"name":"calls_hour",
+									"display_name":"Calls per Hour",
+									"type":"integer",
+									"is_required":true
+							 },
+							 {
+									"target_node":"SKU.MINS_CALL",
+									"name":"mins_call",
+									"display_name":"Minutes per Call",
+									"type":"integer",
+									"is_required":true
+							 }
+						],
+						"conditions" : {
+							"all": "keyword,name,description,for_extend",
+							"unlimited=yes&allowance_unit=sms": "fup_amount",
+							"unlimited=no&allowance_unit=voice": "wallet_amount",
+							"unlimited=yes&allowance_unit=voice": "fup_amount,calls_hour,mins_call"
+						}
+
+				 },
+				 {
+						"name":"DUO Messages",
+						"is_tabular":false,
+						"actions":{
+							 "create":"create_duo_message",
+							 "edit":"edit_duo_message",
+							 "delete":"delete_duo_message"
+						},
+						"params":[
+							 {
+									"target_node":"DUO_MESSAGES.MESSAGE_TYPE",
+									"name":"message_type",
+									"display_name":"Message Type",
+									"type":"enum",
+									"is_required":true,
+									"values":{
+										 "duo_vn_expiry_confirmation":"DUO VN Expiry Confirmation",
+										 "duo_vn_test_confirmation":"DUO VN Test Confirmation"
+									}
+							 },
+							 {
+									"target_node":"DEVICE.BRAND",
+									"name":"brand",
+									"display_name":"Brand",
+									"type":"string",
+									"is_required":true
+							 },
+							 {
+									"target_node":"DEVICE.MESSAGE",
+									"name":"message",
+									"display_name":"Message",
+									"type":"textarea",
+									"is_required":true
+							 },
+							 {
+									"target_node":"DEVICE.ACCESS_CODE",
+									"name":"access_code",
+									"display_name":"Access Code",
+									"type":"integer",
+									"is_required":true
+							 }
+						],
+						"conditions" : {
+							"all": "message_type,brand,message,access_code"
+						}
+				 }
+			]
+	 }
+]
+
