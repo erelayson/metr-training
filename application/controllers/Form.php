@@ -16,12 +16,19 @@ class Form extends CI_Controller {
 		$data['form_controller'] = $this;
 		$data['required_array'] = build_required_array($form_array);
 		$data['form_array'] = $form_array;
+		$data['type_id'] = "";
+		$data['values'] = NULL;
+		$data['error_array'] = NULL;
 
 		if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			$type_id = trim($this->input->post('targetSelect'));
 			$selected_form_array = $this->get_selected_form_array($form_array, $type_id);
 			
 			$error_array = $this->validate_form($selected_form_array, TRUE);
+
+			if ($error_array['success'] == FALSE) {
+				exit;
+			}
 
 			if (!empty($error_array['errors'])){
 				$data['type_id'] = $type_id;
@@ -31,27 +38,29 @@ class Form extends CI_Controller {
 				return;
 			}
 
-			if ($error_array['success'] == FALSE) {
-				exit;
+			$method = $selected_form_array['actions']['create'];
+			$return_array = $this->$method($_POST);
+
+			if($return_array['success'] == TRUE) {
+				// Execute success here
+			} else {
+				// Print the error message and reload the form values
+				echo $return_array['errmsg'];
+				$data['type_id'] = $type_id;
+				$data['values'] = $_POST;
 			}
-
-			// echo "<pre>";
-			// print_r($_POST);
-			// echo "</pre>";
-
-			// $result = $this->result_to_json($form_array, $_POST);
-			// echo "<pre>";
-			// print_r($result);
-			// echo "</pre>";
-
-			$this->view();
-			return;
 		}
-
-		$data['type_id'] = "";
-		$data['values'] = NULL;
-		$data['error_array'] = NULL;
+		
 		$this->load->view('form/survey', $data);
+	}
+
+	private function create_duo($values) {
+		// Execute saving here
+		$return_array = array(
+			"success" => FALSE,
+			"errmsg" => "Saving failed"
+		);
+		return $return_array;
 	}
 
 	public function edit() {
@@ -73,6 +82,8 @@ class Form extends CI_Controller {
 		$data['selector_name'] = 'targetSelect';
 		$data['selector_display_name'] = 'Type';
 		$data['selector_value'] = $selected_form_array['name'];
+		$data['values'] = $form_data;
+		$data['error_array'] = NULL;
 
 		if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			
@@ -83,31 +94,34 @@ class Form extends CI_Controller {
 			}
 
 			if (!empty($error_array['errors'])){
-				// echo "<pre>";
-				// print_r ($error_array['errors']);
-				// echo "</pre>";
 				$data['values'] = $_POST;
 				$data['error_array'] = $error_array['errors'];
 				$this->load->view('form/edit', $data);
 				return;
 			}
 
-			echo "<pre>";
-			print_r($_POST);
-			echo "</pre>";
+			$method = $selected_form_array['actions']['edit'];
+			$return_array = $this->$method($_POST);
 
-			// $result = $this->result_to_json($form_array, $_POST);
-			// echo "<pre>";
-			// print_r($result);
-			// echo "</pre>";
-
-			// $this->view();
-			return;
+			if($return_array['success'] == TRUE) {
+				// Execute success here
+			} else {
+				// Print the error message and reload the form values
+				echo $return_array['errmsg'];
+				$data['values'] = $_POST;
+			}
 		}
 
-		$data['values'] = $form_data;
-		$data['error_array'] = NULL;
 		$this->load->view('form/edit', $data);
+	}
+
+	private function edit_duo($values) {
+		// Execute updating here
+		$return_array = array(
+			"success" => FALSE,
+			"errmsg" => "Updating failed"
+		);
+		return $return_array;
 	}
 
 	public function view() {
@@ -142,7 +156,7 @@ class Form extends CI_Controller {
 			}
 		}
 
-		$data['display_array'] = $this->preprocess($selector_name, $selector_display_name, $dependent_form_array, $form_data, array(array(),array()));
+		$data['display_array'] = $this->preprocess($selector_name, $selector_display_name, $dependent_form_array, $form_data, array($sku_data, $duo_message_data));
 
 		$data['form_data'] = $form_data;
 		$data['method_key'] = 'create';
@@ -332,6 +346,7 @@ class Form extends CI_Controller {
 					// print_r ($additional_data[$additional_param_key]);
 					// echo "</pre>";
 
+					// Place comments here (snapshot of the array)
 					if (array_key_exists($additional_param_key, $additional_data)) {
 						// Convert value to readable display if enum/dropdown/radio
 						foreach ($additional_data[$additional_param_key] as $row_key => $row_value) {
@@ -345,7 +360,9 @@ class Form extends CI_Controller {
 							}
 						}
 					}
+
 				}
+
 			}
 
 			if (array_key_exists($additional_param_key, $additional_data)) {

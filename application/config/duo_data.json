@@ -2,6 +2,10 @@
 	 {
 			"name":"DUO",
 			"type_id":1,
+			"actions":{
+				 "create":"create_duo",
+				 "edit":"edit_duo"
+			},
 			"params":[
 				 {
 						"target_node":"INFO.SWEDEN_OFFER",
@@ -213,4 +217,3 @@
 			]
 	 }
 ]
-
