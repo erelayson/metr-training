@@ -42,8 +42,9 @@
 		return $required_array;
 	}
 
-	function set_dependent_form_validation_rules($params, $conditions = array(), $form_data = array(), $values = array(), $is_table_cell = FALSE, $table_name = "") {
-		$function_success = TRUE;
+	// Set the AJAX value as a parameter
+	function set_dependent_form_validation_rules($params, $conditions = array(), $form_data = array(), $values = array(), $is_table_cell = FALSE, $table_name = "", &$errors = NULL) {
+		$errors = array();
 		$ci = &get_instance();
 		// Retrieve necessary fields for validation if conditions array is passed
 		if(!empty($conditions)) {
@@ -96,8 +97,7 @@
 
 					// Skip setting the rules if choice retrieval fails
 					if($choices['success'] == FALSE) {
-						echo $choices['errmsg'] . "<br/>";
-						$function_success = FALSE;
+						$errors[] = $choices['errmsg'];
 						continue;
 					}
 				}
@@ -115,7 +115,20 @@
 
 			if(!empty($rules)){
 				// For table validation, set the rules by traversing the available keys to access each row
-				if ($is_table_cell == TRUE) {
+				if (!$is_table_cell) {
+
+					// Set the rules for each given input if list type
+					if($param_value['type'] == DEPFORM_TYPE_LIST) {
+						for($i = 0; $i < $param_value['cardinality']; $i++) {
+							$ci->form_validation->set_rules($name."[$i]", $display_name, $rules);
+							echo $rules;
+						}
+					} else {
+						$ci->form_validation->set_rules($name, $display_name, $rules);
+					}
+
+				} else {
+
 					foreach ($values[$table_name] as $row_num => $row_values) {
 						// Set the rules for each given input if list type
 						if($param_value['type'] == DEPFORM_TYPE_LIST) {
@@ -127,20 +140,11 @@
 							$ci->form_validation->set_rules($table_name."[$row_num][$name]", $display_name, $rules);
 						}
 					}
-				} else {
-					// Set the rules for each given input if list type
-					if($param_value['type'] == DEPFORM_TYPE_LIST) {
-						for($i = 0; $i < $param_value['cardinality']; $i++) {
-							$ci->form_validation->set_rules($name."[$i]", $display_name, $rules);
-							echo $rules;
-						}
-					} else {
-						$ci->form_validation->set_rules($name, $display_name, $rules);
-					}
+
 				}
 			}
 		}
-		return $function_success;
+		return $errors;
 	}
 
 	function get_default_rules($type, $choices = array(), $list_data_type = NULL) {
@@ -195,21 +199,8 @@
 		$ci = &get_instance();
 		$errors = array();
 		// Traverse params and fetch the error messages
-		if ($is_table_cell == TRUE) {
-			foreach ($params as $param_key => $param_value) {
-				$name = $param_value['name'] ?? NULL;
-				foreach ($values[$table_name] as $row_num => $row_values) { 
-					// If type is list, assign the array of errors
-					if ($param_value['type'] == DEPFORM_TYPE_LIST) {
-						for($i = 0; $i < $param_value['cardinality']; $i++) {
-								$errors[$row_num][$name][$i] = form_error($table_name."[$row_num][$name][$i]");
-							}
-					} else {
-						$errors[$row_num][$name] = form_error($table_name."[$row_num][$name]");
-					}
-				}
-			}
-		} else {
+		if (!$is_table_cell) {
+
 			foreach ($params as $param_key => $param_value) {
 				$name = $param_value['name'] ?? NULL;
 				// If type is list, assign the array of errors
@@ -223,6 +214,23 @@
 					$errors[$name] = form_error($name);
 				}
 			}
+
+		} else {
+
+			foreach ($params as $param_key => $param_value) {
+				$name = $param_value['name'] ?? NULL;
+				foreach ($values[$table_name] as $row_num => $row_values) { 
+					// If type is list, assign the array of errors
+					if ($param_value['type'] == DEPFORM_TYPE_LIST) {
+						for($i = 0; $i < $param_value['cardinality']; $i++) {
+								$errors[$row_num][$name][$i] = form_error($table_name."[$row_num][$name][$i]");
+							}
+					} else {
+						$errors[$row_num][$name] = form_error($table_name."[$row_num][$name]");
+					}
+				}
+			}
+
 		}
 		return $errors;
 	}
@@ -321,11 +329,15 @@
 			$options = array();
 			if ($type == DEPFORM_TYPE_ENUM || $type == DEPFORM_TYPE_DROPDOWN || $type == DEPFORM_TYPE_RADIO) {
 				$options = get_options_from_source($source_type, $param_value);
-				if($options['success'] == TRUE) {
-					to_tag($name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options['data'], $post_value, $validation_error, $AJAX_params, $build_label);
-				} else {
+				if(!$options['success']) {
+
 					display_only_field($display_name, $options['errmsg']);
 					echo "<br/>";
+
+				} else {
+
+					to_tag($name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options['data'], $post_value, $validation_error, $AJAX_params, $build_label);
+
 				}
 			} else {
 				to_tag($name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options, $post_value, $validation_error, $AJAX_params, $build_label);
@@ -394,10 +406,14 @@
 			case DEPFORM_SRCTYPE_AJAX_DYNAMIC:
 				if(isset($depends_on_value)) {
 					$return_array = curl_get($AJAX_url);
-					if ($return_array['success'] == TRUE) {
-						$return_array['data'] = $return_array['data'][$depends_on_value];
-					} else {
+					if (!$return_array['success']) {
+
 						$return_array['errmsg'] = "Error fetching options: " . $return_array['errmsg'];
+
+					} else {
+
+						$return_array['data'] = $return_array['data'][$depends_on_value];
+
 					}
 				} else {
 					$return_array['data'] = array();
@@ -446,10 +462,8 @@
 				break;
 
 			case DEPFORM_TYPE_ENUM:
-				if($is_dependent == TRUE) {
-					$choices = array(""=>"");
-					dropdown_field($name, $display_name, $choices, $value, $error, $options);
-				} else {
+				if(!$is_dependent) {
+
 					if (isset($choices)){
 						if (count($choices) < DEPFORM_TYPE_DROPDOWN_MIN_OPTIONS) {
 							radio_field($name, $display_name, $value, $choices, $error, $options);
@@ -459,6 +473,12 @@
 					} else {
 						echo "No choices provided for $name.";
 					}
+
+				} else {
+
+					$choices = array(""=>"");
+					dropdown_field($name, $display_name, $choices, $value, $error, $options);
+
 				}
 				break;
 
@@ -500,7 +520,7 @@
 
 			case DEPFORM_TYPE_NUMBER:
 			case DEPFORM_TYPE_FLOAT:
-				$options["attributes"] = array('step'=>PHP_FLOAT_MIN);
+				$options["attributes"] = array('step'=>'any');
 				number_field($name, $display_name, $value, $error, $options);
 				break;
 

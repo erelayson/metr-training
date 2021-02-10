@@ -41,13 +41,17 @@ class Form extends CI_Controller {
 			$method = $selected_form_array['actions']['create'];
 			$return_array = $this->$method($_POST);
 
-			if($return_array['success'] == TRUE) {
-				// Execute success here
-			} else {
+			if(!$return_array['success']) {
+
 				// Print the error message and reload the form values
 				echo $return_array['errmsg'];
 				$data['type_id'] = $type_id;
 				$data['values'] = $_POST;
+				
+			} else {
+				
+				// Execute success here
+
 			}
 		}
 		
@@ -103,12 +107,16 @@ class Form extends CI_Controller {
 			$method = $selected_form_array['actions']['edit'];
 			$return_array = $this->$method($_POST);
 
-			if($return_array['success'] == TRUE) {
-				// Execute success here
-			} else {
+			if(!$return_array['success']) {
+
 				// Print the error message and reload the form values
 				echo $return_array['errmsg'];
 				$data['values'] = $_POST;
+				
+			} else {
+				
+				// Execute success here
+
 			}
 		}
 
@@ -290,10 +298,14 @@ class Form extends CI_Controller {
 
 					$options = get_options_from_source($source_type, $param_value, $depends_on_value, $AJAX_url);
 
-					if($options['success'] == TRUE) {
-						$form_value = $options['data'][$form_data[$param_value['name']]];
-					} else {
+					if(!$options['success']) {
+						
 						$form_value = $options['errmsg'];
+
+					} else {
+						
+						$form_value = $options['data'][$form_data[$param_value['name']]];
+
 					}
 
 				} elseif ($param_value['type'] == DEPFORM_TYPE_TABLE) {
@@ -306,10 +318,12 @@ class Form extends CI_Controller {
 						// Convert value to readable display if enum/dropdown/radio
 						foreach ($form_data[$param_value['name']] as $row_key => $row_value) {
 							if ($table_param_value['type'] == DEPFORM_TYPE_ENUM || $table_param_value['type'] == DEPFORM_TYPE_RADIO || $table_param_value['type'] == DEPFORM_TYPE_DROPDOWN) {
-								$values = $table_param_value['values'] ?? NULL;
+								$source_type = $table_param_value['source_type'] ?? NULL;
+								$options = get_options_from_source($source_type, $table_param_value);
+								// Traverse the table rows (column name:value pairs), check the row whose column name is equal to the name of the current parameter being checked, and convert its value to its readable equivalent
 								foreach ($row_value as $col_key => $col_value) {
-									if ($col_value == $row_value[$table_param_value['name']]) {
-										$form_data[$param_value['name']][$table_param_key][$row_key][$col_key] = $values[$row_value[$table_param_value['name']]];
+									if ($col_key == $table_param_value['name']) {
+										$form_data[$param_value['name']][$row_key][$col_key] = $options['data'][$col_value];
 									}
 								}
 							}
@@ -429,9 +443,9 @@ class Form extends CI_Controller {
 
 		echo "<br/>";
 
-		$additional_params = $display_array['additional_params'] ?? NULL;
-		if (isset($additional_params)){
-			foreach ($additional_params as $additional_param_name => $additional_param_value) {
+		$display_additional_params = $display_array['additional_params'] ?? NULL;
+		if (isset($display_additional_params)){
+			foreach ($display_additional_params as $additional_param_name => $additional_param_value) {
 				echo "$additional_param_name ";
 				if ($additional_param_name == $selected_additional_param) {
 					$this->build_modal($additional_params, $additional_param_name, $additional_param_value['actions'][$action_key], $form_data, $values, $errors);
@@ -556,7 +570,7 @@ class Form extends CI_Controller {
 
 		// Set validation rules based on the selected type
 		$conditions = $selected_form_array['conditions'] ?? NULL;
-		if (set_dependent_form_validation_rules($selected_form_array['params'], $conditions, $form_data, $_POST) == TRUE){
+		if (empty(set_dependent_form_validation_rules($selected_form_array['params'], $conditions, $form_data, $_POST))){
 			$res = $this->form_validation->run();
 			if (!$res){
 				$errors = retrieve_error_messages($selected_form_array['params'], $_POST);
