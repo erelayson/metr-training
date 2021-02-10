@@ -151,7 +151,12 @@ class Form extends CI_Controller {
 		// Send the additional parameters to the view
 		foreach ($dependent_form_array as $key => $value) {
 			if ($value['type_id'] == $form_data[$selector_name]) {
-				$data['additional_params'] = $value['additional_params'];
+				$additional_params = $value['additional_params'] ?? NULL;
+				if (isset($additional_params)) {
+					$data['additional_params'] = $additional_params;
+				} else {
+					$data['additional_params'] = NULL;
+				}
 				break;
 			}
 		}
@@ -321,55 +326,58 @@ class Form extends CI_Controller {
 			}
 		}
 
-		// Preprocess the additional parameter array for display
-		foreach ($dependent_form_type_array['additional_params'] as $additional_param_key => $additional_param_value) {
-			
-			$display_array['additional_params'][$additional_param_value['name']]['is_tabular'] = $additional_param_value['is_tabular'];
-			$display_array['additional_params'][$additional_param_value['name']]['actions'] = $additional_param_value['actions'];
+		$additional_params = $dependent_form_type_array['additional_params'] ?? NULL;
+		if(isset($additional_params)) {
+			// Preprocess the additional parameter array for display
+			foreach ($additional_params as $additional_param_key => $additional_param_value) {
+				
+				$display_array['additional_params'][$additional_param_value['name']]['is_tabular'] = $additional_param_value['is_tabular'];
+				$display_array['additional_params'][$additional_param_value['name']]['actions'] = $additional_param_value['actions'];
 
-			$included_fields = $this->fetch_included_fields($additional_param_value['conditions'], $form_data);
+				$included_fields = $this->fetch_included_fields($additional_param_value['conditions'], $form_data);
 
-			$field_names = array();
-			foreach ($additional_param_value['params'] as $param_key => $param_value) {
+				$field_names = array();
+				foreach ($additional_param_value['params'] as $param_key => $param_value) {
 
-				if (in_array($param_value['name'],$included_fields)) {
+					if (in_array($param_value['name'],$included_fields)) {
 
-					$field_names[$param_value['name']] = $param_value['display_name'];
-					// echo "<pre>";
-					// print_r ($param_value);
-					// echo "</pre>";
-					
-					// echo "<pre>";
-					// print_r ($values);
-					// echo "</pre>";
-					// echo "<pre>";
-					// print_r ($additional_data[$additional_param_key]);
-					// echo "</pre>";
+						$field_names[$param_value['name']] = $param_value['display_name'];
+						// echo "<pre>";
+						// print_r ($param_value);
+						// echo "</pre>";
+						
+						// echo "<pre>";
+						// print_r ($values);
+						// echo "</pre>";
+						// echo "<pre>";
+						// print_r ($additional_data[$additional_param_key]);
+						// echo "</pre>";
 
-					// Place comments here (snapshot of the array)
-					if (array_key_exists($additional_param_key, $additional_data)) {
-						// Convert value to readable display if enum/dropdown/radio
-						foreach ($additional_data[$additional_param_key] as $row_key => $row_value) {
-							if ($param_value['type'] == DEPFORM_TYPE_ENUM || $param_value['type'] == DEPFORM_TYPE_RADIO || $param_value['type'] == DEPFORM_TYPE_DROPDOWN) {
-								$values = $param_value['values'] ?? NULL;
-								foreach ($row_value as $col_key => $col_value) {
-									if ($col_value == $row_value[$param_value['name']]) {
-										$additional_data[$additional_param_key][$row_key][$col_key] = $values[$row_value[$param_value['name']]];
+						// Place comments here (snapshot of the array)
+						if (array_key_exists($additional_param_key, $additional_data)) {
+							// Convert value to readable display if enum/dropdown/radio
+							foreach ($additional_data[$additional_param_key] as $row_key => $row_value) {
+								if ($param_value['type'] == DEPFORM_TYPE_ENUM || $param_value['type'] == DEPFORM_TYPE_RADIO || $param_value['type'] == DEPFORM_TYPE_DROPDOWN) {
+									$values = $param_value['values'] ?? NULL;
+									foreach ($row_value as $col_key => $col_value) {
+										if ($col_value == $row_value[$param_value['name']]) {
+											$additional_data[$additional_param_key][$row_key][$col_key] = $values[$row_value[$param_value['name']]];
+										}
 									}
 								}
 							}
 						}
+
 					}
 
 				}
 
+				if (array_key_exists($additional_param_key, $additional_data)) {
+					$display_array['additional_params'][$additional_param_value['name']]['data'] = $additional_data[$additional_param_key];
+				}
+				
+				$display_array['additional_params'][$additional_param_value['name']]['field_names'] = $field_names;
 			}
-
-			if (array_key_exists($additional_param_key, $additional_data)) {
-				$display_array['additional_params'][$additional_param_value['name']]['data'] = $additional_data[$additional_param_key];
-			}
-			
-			$display_array['additional_params'][$additional_param_value['name']]['field_names'] = $field_names;
 		}
 
 
@@ -421,20 +429,23 @@ class Form extends CI_Controller {
 
 		echo "<br/>";
 
-		foreach ($display_array['additional_params'] as $additional_param_name => $additional_param_value) {
-			echo "$additional_param_name ";
-			if ($additional_param_name == $selected_additional_param) {
-				$this->build_modal($additional_params, $additional_param_name, $additional_param_value['actions'][$action_key], $form_data, $values, $errors);
-			} else {
-				$this->build_modal($additional_params, $additional_param_name, $additional_param_value['actions'][$action_key], $form_data);
-			}
+		$additional_params = $display_array['additional_params'] ?? NULL;
+		if (isset($additional_params)){
+			foreach ($additional_params as $additional_param_name => $additional_param_value) {
+				echo "$additional_param_name ";
+				if ($additional_param_name == $selected_additional_param) {
+					$this->build_modal($additional_params, $additional_param_name, $additional_param_value['actions'][$action_key], $form_data, $values, $errors);
+				} else {
+					$this->build_modal($additional_params, $additional_param_name, $additional_param_value['actions'][$action_key], $form_data);
+				}
 
-			$field_names = $additional_param_value['field_names'];
-			$data = $additional_param_value['data'] ?? NULL;
-			if($additional_param_value['is_tabular']) {
-				$this->to_table($field_names, $data, TRUE, "<th><a href=''>Edit</a> <a href=''>Delete</a></th>");
-			} else {
-				$this->to_list($field_names, $data);
+				$field_names = $additional_param_value['field_names'];
+				$data = $additional_param_value['data'] ?? NULL;
+				if($additional_param_value['is_tabular']) {
+					$this->to_table($field_names, $data, TRUE, "<th><a href=''>Edit</a> <a href=''>Delete</a></th>");
+				} else {
+					$this->to_list($field_names, $data);
+				}
 			}
 		}
 
