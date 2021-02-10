@@ -1,5 +1,19 @@
 # Dependent Form Helper
 
+## Migration Guide:
+
+### Move the following files to the system:
+- application/views/form/survey.php
+- application/views/form/edit.php
+- application/views/form/view.php
+- application/controllers/Form.php
+- application/helpers/dependent_form_helper.php
+- js/dependent_form_selector.js
+
+### Configuration:
+
+#### Create a json file following the prescribed structure below and place it inside application/config/
+
 ## JSON structure for the dependent form data
 ```javascript
 [
@@ -51,6 +65,66 @@
    }
 ]
 ```
+
+#### Add the following line to application/config/config.php:
+```php
+$config['dependent_form_json'] = "name_of_the_json_file.json";
+```
+
+### Creating entries:
+#### For each form type in the JSON, define the following key-value pairs:
+```json
+"actions" : {
+	"create" : "create_callback_method"
+}
+```
+
+#### Create a new method in application/controllers/Form.php for the callback with the same name as defined above:
+```php
+create_callback_method(array $values)
+```
+
+##### Parameters:
+###### values: the $_POST global
+
+##### Return values:
+```json
+array(
+	'success' : true|false,
+      	'errmsg' : string
+);
+```
+
+### Updating entries:
+#### For each form type in the JSON, define the following key-value pairs:
+```json
+"actions" : {
+	"edit" : "edit_callback_method"
+}
+```
+
+#### Create a new method in application/controllers/Form.php for the callback with the same name as defined above:
+```php
+edit_callback_method(array $values)
+```
+
+##### Parameters:
+###### values: the $_POST global
+
+##### Return values:
+```json
+array(
+	'success' : true|false,
+      	'errmsg' : string
+);
+```
+
+### Reading entries:
+#### Copy the view method from application/controllers/Form.php and create one for each form type
+
+#### Configure the model/data retrieval calls in lines 130-133. Assign the main form data to the variable $form_data and the additional parameter data to separate variables.
+
+#### Create an array containing the additional data variables and assign to a variable. Pass the variable inside the preprocess function (line 159) as the $additional_data parameter
 
 
 ## dependent_form_helper.php
