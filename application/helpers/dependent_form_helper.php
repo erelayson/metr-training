@@ -251,7 +251,7 @@
 		div_close();
 	}
 
-	function generate_HTML_from_params($params, $post_value_array = array(), $validation_error_array = array(), $is_table_cell = FALSE, $table_name = "") {
+	function generate_HTML_from_params($params, $post_value_array = array(), $validation_error_array = array(), $is_table_cell = FALSE, $table_name = "", $row_index = 0) {
 		// echo "<pre>";
 		// print_r ($post_value_array);
 		// echo "</pre>";
@@ -261,7 +261,7 @@
 			$display_name = $param_value['display_name'];
 
 			if ($is_table_cell == TRUE) {
-				$input_name = $table_name."[0][$name]";
+				$input_name = $table_name."[$row_index][$name]";
 			} else {
 				$input_name = $name;
 			}
@@ -283,10 +283,16 @@
 					echo generate_HTML_from_params($param_value['params'], NULL, $validation_error_array, TRUE, $name);
 					echo "</tr>";
 				} else {
+					// echo this
+					echo "<pre>";
+					print_r ($post_value_array[$name]);
+					echo "</pre>";
+					$row_index = 0;
 					foreach ($post_value_array[$name] as $table_values) {
 						echo "<tr>";
-						echo generate_HTML_from_params($param_value['params'], $table_values, $validation_error_array, TRUE, $name);
+						echo generate_HTML_from_params($param_value['params'], $table_values, $validation_error_array, TRUE, $name, $row_index);
 						echo "</tr>";
+						$row_index += 1;
 					}
 				}
 				
