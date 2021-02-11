@@ -90,6 +90,10 @@ class Form extends CI_Controller {
 		$data['error_array'] = NULL;
 
 		if ($_SERVER['REQUEST_METHOD'] == "POST") {
+
+			echo "<pre>";
+			print_r ($_POST);
+			echo "</pre>";
 			
 			$error_array = $this->validate_form($selected_form_array, TRUE);
 
@@ -260,6 +264,10 @@ class Form extends CI_Controller {
 	}
 
 	private function preprocess($selector_name, $selector_display_name, $dependent_form_array, $form_data, $additional_data = array()) {
+
+		// echo "<pre>";
+		// print_r ($additional_data);
+		// echo "</pre>";
 		$display_array = array();
 
 		// For the selector, fetch the value from the dependent_form_array
@@ -352,30 +360,20 @@ class Form extends CI_Controller {
 
 				$field_names = array();
 				foreach ($additional_param_value['params'] as $param_key => $param_value) {
-
 					if (in_array($param_value['name'],$included_fields)) {
 
 						$field_names[$param_value['name']] = $param_value['display_name'];
-						// echo "<pre>";
-						// print_r ($param_value);
-						// echo "</pre>";
-						
-						// echo "<pre>";
-						// print_r ($values);
-						// echo "</pre>";
-						// echo "<pre>";
-						// print_r ($additional_data[$additional_param_key]);
-						// echo "</pre>";
 
 						// Place comments here (snapshot of the array)
 						if (array_key_exists($additional_param_key, $additional_data)) {
 							// Convert value to readable display if enum/dropdown/radio
 							foreach ($additional_data[$additional_param_key] as $row_key => $row_value) {
 								if ($param_value['type'] == DEPFORM_TYPE_ENUM || $param_value['type'] == DEPFORM_TYPE_RADIO || $param_value['type'] == DEPFORM_TYPE_DROPDOWN) {
-									$values = $param_value['values'] ?? NULL;
+									$source_type = $param_value['source_type'] ?? NULL;
+									$options = get_options_from_source($source_type, $param_value);
 									foreach ($row_value as $col_key => $col_value) {
 										if ($col_value == $row_value[$param_value['name']]) {
-											$additional_data[$additional_param_key][$row_key][$col_key] = $values[$row_value[$param_value['name']]];
+											$additional_data[$additional_param_key][$row_key][$col_key] = $options['data'][$row_value[$param_value['name']]];
 										}
 									}
 								}
@@ -424,7 +422,12 @@ class Form extends CI_Controller {
 		return $included_fields;
 	}
 
+
 	public function display_array_to_html($display_array, $additional_params, $selected_additional_param, $values, $errors, $action_key, $form_data) {
+
+		// echo "<pre>";
+		// print_r ($display_array);
+		// echo "</pre>";
 
 		foreach ($display_array as $key => $value) {
 			if($key != 'additional_params') {
