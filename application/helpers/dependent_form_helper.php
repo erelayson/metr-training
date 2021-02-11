@@ -261,7 +261,9 @@
 			$display_name = $param_value['display_name'];
 
 			if ($is_table_cell == TRUE) {
-				$name = $table_name."[0][$name]";
+				$input_name = $table_name."[0][$name]";
+			} else {
+				$input_name = $name;
 			}
 
 			if ($type == DEPFORM_TYPE_TABLE) {
@@ -276,7 +278,18 @@
 									</tr>
 								</thead>
 								<tbody>";
-				echo generate_HTML_from_params($param_value['params'], $post_value_array[$name], $validation_error_array, TRUE, $name);
+				if (empty($post_value_array[$name])) {
+					echo "<tr>";
+					echo generate_HTML_from_params($param_value['params'], NULL, $validation_error_array, TRUE, $name);
+					echo "</tr>";
+				} else {
+					foreach ($post_value_array[$name] as $table_values) {
+						echo "<tr>";
+						echo generate_HTML_from_params($param_value['params'], $table_values, $validation_error_array, TRUE, $name);
+						echo "</tr>";
+					}
+				}
+				
 				echo "	</tbody>
 									<tfoot>
 									<tr>
@@ -336,11 +349,11 @@
 
 				} else {
 
-					to_tag($name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options['data'], $post_value, $validation_error, $AJAX_params, $build_label);
+					to_tag($input_name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options['data'], $post_value, $validation_error, $AJAX_params, $build_label);
 
 				}
 			} else {
-				to_tag($name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options, $post_value, $validation_error, $AJAX_params, $build_label);
+				to_tag($input_name, $display_name, $type, $is_dependent, $cardinality, $is_required, $options, $post_value, $validation_error, $AJAX_params, $build_label);
 			}
 
 			if($is_table_cell) {
