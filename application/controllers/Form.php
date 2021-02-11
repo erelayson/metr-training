@@ -372,7 +372,7 @@ class Form extends CI_Controller {
 									$source_type = $param_value['source_type'] ?? NULL;
 									$options = get_options_from_source($source_type, $param_value);
 									foreach ($row_value as $col_key => $col_value) {
-										if ($col_value == $row_value[$param_value['name']]) {
+										if ($col_key == $param_value['name']) {
 											$additional_data[$additional_param_key][$row_key][$col_key] = $options['data'][$row_value[$param_value['name']]];
 										}
 									}
