@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>CREATE A PROMO!</title>
+	<title>Create a Promo!</title>
   <?php require "head.php" ?>
 </head>
 <body class="bg-secondary text-light">
